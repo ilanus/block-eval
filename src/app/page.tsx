@@ -1,28 +1,25 @@
 "use client";
 
-import { Block } from "./components/Block";
-import { Button } from "./components/Button";
 import { useCallback, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { formatResult } from "./utils/formatResult";
+import { Block } from "./components/Block";
+import { Button } from "./components/Button";
 
-const formatResult = (result: any): string => {
-  if (typeof result === "string" && /^https?:\/\/[^\s]+$/.test(result)) {
-    return `<a href="${result}" target="_blank" rel="noopener noreferrer">${result}</a>`;
-  }
+type FormValues = {
+  block: {
+    value: string;
+  }[];
+};
 
-  if (result instanceof HTMLElement) {
-    return result.outerHTML;
-  }
-
-  return result.toString();
+const defaultValues = {
+  block: [{ value: "" }],
 };
 
 export default function Home() {
   const [results, setResults] = useState<Record<string, string>>({});
-  const { control, getValues } = useForm({
-    defaultValues: {
-      block: [{ value: "" }],
-    },
+  const { control, getValues } = useForm<FormValues>({
+    defaultValues,
   });
 
   const { fields, append } = useFieldArray({
@@ -35,7 +32,10 @@ export default function Home() {
   }, [append]);
 
   // Resolve references within block expressions
-  const evaluateExpression = (expression: string, values: any): string => {
+  const evaluateExpression = (
+    expression: string,
+    values: FormValues
+  ): string => {
     const referencePattern = /\b(A\d+)\b/g;
 
     const resolvedExpression = expression.replace(referencePattern, (match) => {
